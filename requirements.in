@@ -1,0 +1,7 @@
+llama-index-core
+llama-index-readers-file
+llama-index-vector-stores-qdrant
+llama-index-embeddings-huggingface
+qdrant-client
+deepeval
+python-dotenv
