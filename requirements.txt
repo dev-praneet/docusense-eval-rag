@@ -150,12 +150,21 @@ llama-index-core==0.14.25
     # via
     #   -r requirements.in
     #   llama-index-embeddings-huggingface
+    #   llama-index-llms-groq
+    #   llama-index-llms-openai
+    #   llama-index-llms-openai-like
     #   llama-index-readers-file
     #   llama-index-vector-stores-qdrant
 llama-index-embeddings-huggingface==0.8.0
     # via -r requirements.in
 llama-index-instrumentation==0.6.0
     # via llama-index-workflows
+llama-index-llms-groq==0.6.1
+    # via -r requirements.in
+llama-index-llms-openai==0.8.2
+    # via llama-index-llms-openai-like
+llama-index-llms-openai-like==0.8.1
+    # via llama-index-llms-groq
 llama-index-readers-file==0.7.0
     # via -r requirements.in
 llama-index-vector-stores-qdrant==0.10.4
@@ -200,7 +209,9 @@ numpy==2.5.3
     #   sentence-transformers
     #   transformers
 openai==2.54.0
-    # via deepeval
+    # via
+    #   deepeval
+    #   llama-index-llms-openai
 opentelemetry-api==1.45.1
     # via
     #   deepeval

@@ -2,6 +2,7 @@ llama-index-core
 llama-index-readers-file
 llama-index-vector-stores-qdrant
 llama-index-embeddings-huggingface
+llama-index-llms-groq
 qdrant-client
 deepeval
 python-dotenv
