@@ -6,3 +6,9 @@
 
 ## Docker command for quadrant db:
     docker run -p 6333:6333 -v C:\pd\docusense-eval-rag\qdrant_data:/qdrant/storage qdrant/qdrant
+
+## Running the API server using uvicorn:
+    uvicorn main:app --reload --port 8000
+
+## Swagger UI:
+    http://localhost:8000/docs

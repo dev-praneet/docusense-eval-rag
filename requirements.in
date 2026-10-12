@@ -6,3 +6,5 @@ llama-index-llms-groq
 qdrant-client
 deepeval
 python-dotenv
+fastapi
+uvicorn
