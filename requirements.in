@@ -4,7 +4,7 @@ llama-index-vector-stores-qdrant
 llama-index-embeddings-huggingface
 llama-index-llms-groq
 qdrant-client
-deepeval
 python-dotenv
 fastapi
 uvicorn
+deepeval

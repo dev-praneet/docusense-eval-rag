@@ -21,7 +21,6 @@ def initialize_rag_engine():
     groq_api_key = os.getenv("GROQ_API_KEY")
     if not groq_api_key or groq_api_key == "gsk_your_free_groq_key_here":
         raise ValueError("GROQ_API_KEY is missing or unconfigured in your .env file!")
-    print("[3/3] Initializing Groq LLM API (llama-3.3-70b-versatile)...")
 
     llm = Groq(
         model="openai/gpt-oss-20b",

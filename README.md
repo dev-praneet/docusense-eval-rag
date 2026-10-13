@@ -12,3 +12,15 @@
 
 ## Swagger UI:
     http://localhost:8000/docs
+
+## cURL to check if a model is accessible through Groq:
+    check this https://console.groq.com/docs/overview
+    ```    
+    curl -X POST https://api.groq.com/openai/v1/responses \
+    -H "Authorization: Bearer $GROQ_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+        "model": "openai/gpt-oss-20b",
+        "input": "Explain the importance of fast language models"
+    }'
+    ```
