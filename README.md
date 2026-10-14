@@ -1,3 +1,6 @@
+## Starting python venv:
+    source venv/Scripts/activate
+
 ## Generating the lockfile:
     pip-compile requirements.in --output-file=requirements.txt
 
@@ -24,3 +27,6 @@
         "input": "Explain the importance of fast language models"
     }'
     ```
+
+## Setting up frontend repo:
+    npm create vite@latest frontend -- --template react-ts

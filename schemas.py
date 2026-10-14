@@ -21,3 +21,13 @@ class HealthResponse(BaseModel):
     qdrant_connected: bool
     collection_name: str
     total_points: int
+
+class EvalRequest(BaseModel):
+    question: str
+    answer: str
+    retrieved_contexts: List[str]
+
+class EvalResponse(BaseModel):
+    faithfulness: float
+    relevancy: float
+    precision: float

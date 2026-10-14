@@ -8,7 +8,7 @@ from llama_index.llms.groq import Groq
 load_dotenv()
 COLLECTION_NAME = "documents"
 
-def initialize_rag_engine():
+def initialize_rag_engine(streaming: bool = False):
     qdrant_url = os.getenv("QDRANT_URL", "http://localhost:6333")
     print(f"\n[1/3] Connecting to Qdrant Docker server at {qdrant_url}...")
     client = QdrantClient(url=qdrant_url, timeout=60)
@@ -31,7 +31,7 @@ def initialize_rag_engine():
     Settings.llm = llm
     index = VectorStoreIndex.from_vector_store(vector_store=vector_store)
     # Retrieve top 3 most relevant context chunks per query
-    query_engine = index.as_query_engine(similarity_top_k=3)
+    query_engine = index.as_query_engine(similarity_top_k=3, streaming=streaming)
     return query_engine
 
 def ask_question(query_text: str):
