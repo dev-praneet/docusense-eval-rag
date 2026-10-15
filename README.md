@@ -2,10 +2,10 @@
     source venv/Scripts/activate
 
 ## Generating the lockfile:
-    pip-compile requirements.in --output-file=requirements.txt
+    pip-compile requirements.in --output-file=requirements-windows.txt
 
-## Installing dependencies according to requirements.txt
-    python -m pip install -r requirements.txt
+## Installing dependencies according to requirements-windows.txt
+    python -m pip install -r requirements-windows.txt
 
 ## Docker command for quadrant db:
     docker run -p 6333:6333 -v C:\pd\docusense-eval-rag\qdrant_data:/qdrant/storage qdrant/qdrant
@@ -30,3 +30,18 @@
 
 ## Setting up frontend repo:
     npm create vite@latest frontend -- --template react-ts
+
+## Updating the requirements-linux.txt
+    ```
+    MSYS_NO_PATHCONV=1 docker run --rm \
+    -v "C:/pd/docusense-eval-rag/backend:/work" \
+    -w /work \
+    python:3.13-slim \
+    sh -c "pip install --no-cache-dir pip-tools && pip-compile requirements.in --output-file=requirements-linux.txt"
+    ```
+    Run it before the first Docker Compose build, and again whenever you change requirements.in. It creates a temporary Linux container, installs pip-tools inside it, and runs pip-compile. Because backend is mounted at /work, the resulting requirements-linux.txt is written to your project folder. --rm removes the temporary helper container when it exits; it does not start your app or install anything into the backend container.
+
+## Starting up:
+    docker compose up
+    docker compose up --build
+    docker compose up --build --watch

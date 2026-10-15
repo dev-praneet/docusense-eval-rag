@@ -6,14 +6,14 @@ from llama_index.vector_stores.qdrant import QdrantVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from ingest import load_and_chunk_documents
 
-load_dotenv()
 DATA_DIR = "./data"
 QDRANT_STORAGE_PATH = "./qdrant_data"
 COLLECTION_NAME = "documents"
 
 def build_vector_database():
     nodes = load_and_chunk_documents(DATA_DIR)
-    client = QdrantClient(url="http://localhost:6333", timeout=60)
+    qdrant_url = os.getenv("QDRANT_URL", "http://localhost:6333")
+    client = QdrantClient(url=qdrant_url, timeout=60)
     # client = QdrantClient(path=QDRANT_STORAGE_PATH)
     vector_store = QdrantVectorStore(
         client=client,
@@ -31,6 +31,8 @@ def build_vector_database():
     return index
 
 if __name__ == "__main__":
+    load_dotenv()
+
     try:
         build_vector_database()
     except Exception as e:

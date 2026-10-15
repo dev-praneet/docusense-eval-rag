@@ -5,7 +5,7 @@ from llama_index.core import VectorStoreIndex, Settings
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.groq import Groq
-load_dotenv()
+
 COLLECTION_NAME = "documents"
 
 def initialize_rag_engine(streaming: bool = False):
@@ -53,5 +53,6 @@ def ask_question(query_text: str):
         print(f"     Snippet: '{snippet}...'\n")
 
 if __name__ == "__main__":
+    load_dotenv()
     sample_query = "What is the main algorithm or topic described in the document?"
     ask_question(sample_query)

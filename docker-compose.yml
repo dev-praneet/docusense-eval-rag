@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: docusense_qdrant
+    volumes:
+      - ./qdrant_data:/qdrant/storage
+    ports:
+      # host-port:container-port
+      - "6333:6333"
+
+  backend:
+    build:
+      context: ./backend
+      # dockerfile: backend/Dockerfile
+    container_name: docusense_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+      - GROQ_API_KEY=${GROQ_API_KEY}
+    # Enable Live Watching for Backend
+    develop:
+      watch:
+        # Sync Python files instantly into the container
+        - path: ./backend
+          action: sync
+          target: /app/backend
+        # Rebuild container only if dependencies change
+        - path: ./backend/requirements-linux.txt
+          action: rebuild
+
+  frontend:
+    build:
+      context: ./frontend
+      # dockerfile: frontend/Dockerfile
+    container_name: docusense_frontend
+    ports:
+      - "5173:5173"
+    # Enable Live Watching for Frontend
+    develop:
+      watch:
+        # Sync React components instantly (Vite triggers live HMR)
+        - path: ./frontend/src
+          action: sync
+          target: /app/src
+        # Rebuild container only if package.json changes
+        - path: ./frontend/package.json
+          action: rebuild

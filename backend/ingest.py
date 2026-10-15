@@ -3,8 +3,6 @@ from llama_index.core import SimpleDirectoryReader
 import os
 from llama_index.core.node_parser import SentenceSplitter
 
-load_dotenv()
-
 DATA_DIR = "./data"
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 50
@@ -31,6 +29,7 @@ def load_and_chunk_documents(data_path: str):
 
 
 if __name__ == "__main__":
+    load_dotenv()
     try:
         nodes = load_and_chunk_documents(DATA_DIR)
     except Exception as e:

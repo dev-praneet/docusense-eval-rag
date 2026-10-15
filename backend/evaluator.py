@@ -7,8 +7,6 @@ from llama_index.llms.openai_like import OpenAILike
 
 from rag_engine import initialize_rag_engine
 
-load_dotenv()
-
 # 1. Custom DeepEval LLM Wrapper using Free Groq API
 class GroqJudgeLLM(DeepEvalBaseLLM):
     def __init__(self, model_name: str = "openai/gpt-oss-120b"):
@@ -122,4 +120,5 @@ def run_evaluation_suite():
 
 
 if __name__ == "__main__":
+    load_dotenv()
     run_evaluation_suite()
