@@ -1,8 +1,11 @@
 import os
 import json
 import asyncio
+import shutil
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, status, BackgroundTasks
+from pathlib import Path
+from uuid import UUID, uuid4
+from fastapi import FastAPI, File, HTTPException, status, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from qdrant_client import QdrantClient
@@ -10,11 +13,14 @@ from qdrant_client import QdrantClient
 from schemas import QueryRequest, SourceNodeMetadata, QueryResponse, HealthResponse, EvalRequest, EvalResponse
 from rag_engine import initialize_rag_engine
 from evaluator import GroqJudgeLLM
+from vector_db import add_document_to_vector_database, delete_document_from_vector_database
 from deepeval.metrics import FaithfulnessMetric, AnswerRelevancyMetric, ContextualPrecisionMetric
 from deepeval.test_case import LLMTestCase
 
 # Global container for RAG query engine
 app_state = {}
+UPLOAD_DIR = Path(__file__).resolve().parent / "data" / "uploads"
+MAX_PDF_SIZE = 25 * 1024 * 1024
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -65,6 +71,75 @@ async def check_health():
         )
     finally:
         client.close()
+
+@app.post("/api/v1/documents", status_code=status.HTTP_201_CREATED, tags=["Documents"])
+async def upload_document(file: UploadFile = File(...)):
+    filename = Path(file.filename or "").name
+    if not filename or Path(filename).suffix.lower() != ".pdf":
+        raise HTTPException(status_code=400, detail="Upload a PDF file.")
+
+    document_dir = UPLOAD_DIR / uuid4().hex
+    document_dir.mkdir(parents=True, exist_ok=False)
+    destination = document_dir / filename
+    size = 0
+
+    try:
+        with destination.open("wb") as output_file:
+            while chunk := await file.read(1024 * 1024):
+                size += len(chunk)
+                if size > MAX_PDF_SIZE:
+                    raise HTTPException(status_code=413, detail="PDF exceeds the 25 MB upload limit.")
+                output_file.write(chunk)
+
+        if size == 0:
+            raise HTTPException(status_code=400, detail="The uploaded PDF is empty.")
+        with destination.open("rb") as saved_file:
+            if b"%PDF-" not in saved_file.read(1024):
+                raise HTTPException(status_code=400, detail="The uploaded file is not a valid PDF.")
+
+        chunks_indexed = await asyncio.to_thread(
+            add_document_to_vector_database,
+            str(destination),
+            document_dir.name,
+        )
+        return {
+            "document_id": document_dir.name,
+            "filename": filename,
+            "chunks_indexed": chunks_indexed,
+        }
+    except HTTPException:
+        shutil.rmtree(document_dir, ignore_errors=True)
+        raise
+    except Exception as error:
+        shutil.rmtree(document_dir, ignore_errors=True)
+        raise HTTPException(
+            status_code=500,
+            detail="The PDF could not be indexed.",
+        ) from error
+    finally:
+        await file.close()
+
+@app.delete("/api/v1/documents/{document_id}", tags=["Documents"])
+async def delete_document(document_id: str):
+    try:
+        normalized_id = UUID(document_id).hex
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail="Invalid document ID.") from error
+
+    document_dir = UPLOAD_DIR / normalized_id
+    if not document_dir.is_dir():
+        raise HTTPException(status_code=404, detail="Document not found.")
+
+    try:
+        await asyncio.to_thread(delete_document_from_vector_database, normalized_id)
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail="The document could not be removed from the vector database.",
+        ) from error
+
+    shutil.rmtree(document_dir)
+    return {"document_id": normalized_id, "deleted": True}
 
 @app.post("/api/v1/query", response_model=QueryResponse, tags=["RAG Engine"])
 async def run_query(request: QueryRequest):

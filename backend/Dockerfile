@@ -2,7 +2,8 @@ FROM python:3.13-slim
 
 WORKDIR /app/backend
 COPY requirements-linux.txt .
-RUN pip install --no-cache-dir -r requirements-linux.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+	pip install -r requirements-linux.txt
 
 COPY . .
 EXPOSE 8000

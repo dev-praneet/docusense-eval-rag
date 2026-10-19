@@ -10,6 +10,9 @@
 ## Docker command for quadrant db:
     docker run -p 6333:6333 -v C:\pd\docusense-eval-rag\qdrant_data:/qdrant/storage qdrant/qdrant
 
+## web client to access quadrant db data:
+    http://localhost:6333/dashboard#/console
+
 ## Running the API server using uvicorn:
     uvicorn main:app --reload --port 8000
 

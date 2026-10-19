@@ -349,6 +349,8 @@ python-dotenv==1.2.4
     #   -r requirements.in
     #   deepeval
     #   pydantic-settings
+python-multipart==0.0.32
+    # via -r requirements.in
 pytz==2026.5
     # via pandas
 pyyaml==6.0.3

@@ -20,6 +20,8 @@ services:
     environment:
       - QDRANT_URL=http://qdrant:6333
       - GROQ_API_KEY=${GROQ_API_KEY}
+    volumes:
+      - ./backend/data:/app/backend/data
     # Enable Live Watching for Backend
     develop:
       watch:
