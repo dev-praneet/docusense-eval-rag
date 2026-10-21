@@ -7,7 +7,7 @@ DATA_DIR = "./data"
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 50
 
-def load_and_chunk_documents(data_path: str, document_id: str | None = None):
+def load_and_chunk_documents(data_path: str, document_id: str | None = None, session_id: str | None = None, user_id: str | None = None):
     path = Path(data_path)
     if not path.exists():
         raise ValueError(f"Path '{data_path}' does not exist")
@@ -23,6 +23,10 @@ def load_and_chunk_documents(data_path: str, document_id: str | None = None):
     if path.is_file() and document_id:
         for document in documents:
             document.id_ = document_id
+            if session_id:
+                document.metadata["session_id"] = session_id
+            if user_id:
+                document.metadata["user_id"] = user_id
 
     print(f"successfully loaded {len(documents)} document sources/pages")
 

@@ -1,3 +1,90 @@
+.workspace {
+  width: min(800px, 100%);
+  box-sizing: border-box;
+  margin: 40px auto;
+  padding: 0 20px;
+  text-align: left;
+}
+
+.workspace-header,
+.account-actions,
+.form-title,
+.upload-form,
+.document-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.workspace-header,
+.form-title,
+.document-list li {
+  justify-content: space-between;
+}
+
+.account-actions span {
+  overflow-wrap: anywhere;
+}
+
+.account-form,
+.document-section {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.account-form {
+  display: grid;
+  gap: 10px;
+}
+
+.account-form input,
+.upload-form input {
+  min-width: 0;
+  flex: 1;
+  padding: 10px;
+}
+
+.workspace button {
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text-h);
+  cursor: pointer;
+}
+
+.workspace button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.document-list {
+  padding: 0;
+  list-style: none;
+}
+
+.document-list li {
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.document-list li span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.workspace-error {
+  padding: 10px 0;
+  color: #ab3030;
+}
+
+@media (max-width: 540px) {
+  .workspace { margin: 24px auto; }
+  .account-actions { width: 100%; }
+  .upload-form input { flex-basis: 100%; }
+}
+
 .counter {
   font-size: 16px;
   padding: 5px 10px;

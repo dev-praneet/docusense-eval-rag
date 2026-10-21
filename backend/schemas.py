@@ -1,6 +1,10 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
+class AccountCredentials(BaseModel):
+    email: str = Field(..., min_length=3, max_length=254, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+    password: str = Field(..., min_length=12, max_length=128)
+
 class QueryRequest(BaseModel):
     question: str = Field(..., example="What is the primary algorithm discussed?")
     similarity_top_k: Optional[int] = Field(default=3, ge=1, le=10)

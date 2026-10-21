@@ -19,6 +19,27 @@
 ## Swagger UI:
     http://localhost:8000/docs
 
+## Guest and account documents:
+    Open http://localhost:5173 to continue as a guest, upload PDFs, and query or delete them.
+    The guest cookie is HttpOnly and lasts 30 days. Create an account or log in to claim PDFs from that browser's guest session; account documents then follow the user across browsers.
+    The login cookie is revocable and lasts seven days. Logging out starts a fresh guest session.
+    Both cookies require the frontend and backend to use localhost (not mixed localhost/127.0.0.1).
+
+    The API exposes POST /api/v1/auth/register, /login, /logout, GET /api/v1/auth/me, GET/POST /api/v1/documents, and DELETE /api/v1/documents/{document_id}.
+    Accounts, login sessions, and document ownership persist through SQLAlchemy ORM in PostgreSQL (the postgres_data Docker volume).
+    Qdrant stores session_id or user_id on the vectors, and uploaded PDFs remain in backend/data/uploads.
+    PostgreSQL is available locally on 127.0.0.1:5433; set POSTGRES_USER, POSTGRES_PASSWORD, and POSTGRES_DB in the root .env before first startup. The default password is for local development only.
+    Changing these settings later does not change credentials in an existing Postgres volume.
+    The previous backend/data/app.db is not deleted; it currently contains no account or document records, so there is no existing data to migrate.
+    Existing guest PDFs stored under backend/data/uploads/<guest-id>/ are claimed on login; older vectors with no session_id cannot be assigned and need to be re-uploaded.
+
+    This is local email/password authentication, not an identity provider. 
+    
+## Things to take care when deploying:
+    - Use HTTPS and set COOKIE_SECURE=true when deploying over HTTPS; review CSRF protection, rate limiting, email verification, and password recovery before exposing this app publicly.
+    - Protect the backend/data directory and Qdrant storage with appropriate filesystem permissions.
+    - Do not publish Qdrant's port in a public deployment; direct access bypasses the app's auth.
+
 ## cURL to check if a model is accessible through Groq:
     check this https://console.groq.com/docs/overview
     ```    
@@ -45,6 +66,7 @@
     Run it before the first Docker Compose build, and again whenever you change requirements.in. It creates a temporary Linux container, installs pip-tools inside it, and runs pip-compile. Because backend is mounted at /work, the resulting requirements-linux.txt is written to your project folder. --rm removes the temporary helper container when it exits; it does not start your app or install anything into the backend container.
 
 ## Starting up:
+    (use -d flag if detached mode is required)
     docker compose up
     docker compose up --build
     docker compose up --build --watch

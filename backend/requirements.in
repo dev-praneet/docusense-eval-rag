@@ -6,6 +6,8 @@ llama-index-llms-groq
 qdrant-client
 python-dotenv
 fastapi
+sqlalchemy
+psycopg[binary]
 python-multipart
 uvicorn
 deepeval

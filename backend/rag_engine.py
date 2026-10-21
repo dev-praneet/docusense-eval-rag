@@ -2,13 +2,14 @@ import os
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
 from llama_index.core import VectorStoreIndex, Settings
+from llama_index.core.vector_stores import MetadataFilter, MetadataFilters
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.groq import Groq
 
 COLLECTION_NAME = "documents"
 
-def initialize_rag_engine(streaming: bool = False):
+def initialize_rag_engine():
     qdrant_url = os.getenv("QDRANT_URL", "http://localhost:6333")
     print(f"\n[1/3] Connecting to Qdrant Docker server at {qdrant_url}...")
     client = QdrantClient(url=qdrant_url, timeout=60)
@@ -30,12 +31,17 @@ def initialize_rag_engine(streaming: bool = False):
     Settings.embed_model = embed_model
     Settings.llm = llm
     index = VectorStoreIndex.from_vector_store(vector_store=vector_store)
-    # Retrieve top 3 most relevant context chunks per query
-    query_engine = index.as_query_engine(similarity_top_k=3, streaming=streaming)
-    return query_engine
+    return index
+
+def session_query_engine(index, owner_id: str, owner_key: str = "session_id", streaming: bool = False):
+    return index.as_query_engine(
+        similarity_top_k=3,
+        streaming=streaming,
+        filters=MetadataFilters(filters=[MetadataFilter(key=owner_key, value=owner_id)]),
+    )
 
 def ask_question(query_text: str):
-    query_engine = initialize_rag_engine()
+    query_engine = initialize_rag_engine().as_query_engine(similarity_top_k=3)
     print(f"\nUser Question: '{query_text}'")
     print("Searching Qdrant vector space & generating response with Groq...\n")
     response = query_engine.query(query_text)
