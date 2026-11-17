@@ -39,6 +39,7 @@
     - Use HTTPS and set COOKIE_SECURE=true when deploying over HTTPS; review CSRF protection, rate limiting, email verification, and password recovery before exposing this app publicly.
     - Protect the backend/data directory and Qdrant storage with appropriate filesystem permissions.
     - Do not publish Qdrant's port in a public deployment; direct access bypasses the app's auth.
+    - Take care of the pdfs being saved in the backend folder itself
 
 ## cURL to check if a model is accessible through Groq:
     check this https://console.groq.com/docs/overview
@@ -68,5 +69,16 @@
 ## Starting up:
     (use -d flag if detached mode is required)
     docker compose up
+    docker compose up --watch (generally for dev mode, I want this)
     docker compose up --build
     docker compose up --build --watch
+
+## stoping:
+    docker compose stop (to stop while keeping the containers)
+    docker compose down (removes the container and Compose network)
+
+## to copy files from host to container when changes are made in the frontend:
+    docker compose cp ./frontend/src/. frontend:/app/src/
+
+## if package.json changes (also triggers npm install etc):
+    docker compose up -d --build --no-deps frontend

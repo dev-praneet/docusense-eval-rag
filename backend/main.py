@@ -12,7 +12,7 @@ from qdrant_client import QdrantClient
 from sqlalchemy.exc import IntegrityError
 
 from schemas import QueryRequest, SourceNodeMetadata, QueryResponse, HealthResponse, EvalRequest, EvalResponse, AccountCredentials
-from rag_engine import initialize_rag_engine, session_query_engine
+from rag_engine import initialize_rag_engine, session_chat_engine, session_query_engine
 from evaluator import GroqJudgeLLM
 from vector_db import add_document_to_vector_database, delete_document_from_vector_database, claim_document_vectors
 import auth
@@ -323,14 +323,45 @@ async def stream_query(request: QueryRequest, http_request: Request):
     index = app_state.get("index")
     if index is None:
         raise HTTPException(status_code=500, detail="Engine not initialized.")
-
+    # at place of query_engine we need chat_engine
     owner_key, owner_id = request_owner(http_request)
-    query_engine = session_query_engine(index, owner_id, owner_key, streaming=True)
+    # query_engine = session_query_engine(index, owner_id, owner_key, streaming=True)
+    chat_engine = session_chat_engine(index, owner_id, owner_key)
+
+    # async def event_generator():
+    #     # Blocking LlamaIndex call offloaded so the event loop stays free
+    #     response = await asyncio.to_thread(query_engine.query, request.question)
+
+    #     # 1. First event: Send retrieved sources immediately
+    #     sources = []
+    #     contexts = []
+    #     for node in response.source_nodes:
+    #         contexts.append(node.node.get_content())
+    #         sources.append({
+    #             "score": round(node.score, 4) if node.score else 0.0,
+    #             "file_name": node.node.metadata.get("file_name", "Unknown"),
+    #             "page_label": str(node.node.metadata.get("page_label", "N/A")),
+    #             "snippet": node.node.get_content()[:180].replace("\n", " ") + "..."
+    #         })
+            
+    #     yield f"event: metadata\ndata: {json.dumps({'sources': sources, 'contexts': contexts})}\n\n"
+
+    #     # 2. Subsequent events: Stream answer tokens as the LLM produces them
+    #     token_iter = iter(response.response_gen)
+    #     sentinel = object()
+    #     while True:
+    #         token = await asyncio.to_thread(next, token_iter, sentinel)
+    #         if token is sentinel:
+    #             break
+    #         if token:
+    #             yield f"event: delta\ndata: {json.dumps({'text': token})}\n\n"
+
+    #     yield "event: done\ndata: {}\n\n"
 
     async def event_generator():
         # Blocking LlamaIndex call offloaded so the event loop stays free
-        response = await asyncio.to_thread(query_engine.query, request.question)
-
+        # response = await asyncio.to_thread(query_engine.query, request.question)
+        response = await chat_engine.astream_chat(request.question)
         # 1. First event: Send retrieved sources immediately
         sources = []
         contexts = []
@@ -346,12 +377,7 @@ async def stream_query(request: QueryRequest, http_request: Request):
         yield f"event: metadata\ndata: {json.dumps({'sources': sources, 'contexts': contexts})}\n\n"
 
         # 2. Subsequent events: Stream answer tokens as the LLM produces them
-        token_iter = iter(response.response_gen)
-        sentinel = object()
-        while True:
-            token = await asyncio.to_thread(next, token_iter, sentinel)
-            if token is sentinel:
-                break
+        async for token in response.async_response_gen():
             if token:
                 yield f"event: delta\ndata: {json.dumps({'text': token})}\n\n"
 

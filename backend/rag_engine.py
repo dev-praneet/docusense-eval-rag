@@ -1,8 +1,9 @@
 import os
 from dotenv import load_dotenv
-from qdrant_client import QdrantClient
+from qdrant_client import QdrantClient, AsyncQdrantClient
 from llama_index.core import VectorStoreIndex, Settings
-from llama_index.core.vector_stores import MetadataFilter, MetadataFilters
+from llama_index.core.memory import ChatMemoryBuffer
+from llama_index.core.vector_stores import MetadataFilter, MetadataFilters, FilterOperator
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.groq import Groq
@@ -13,8 +14,10 @@ def initialize_rag_engine():
     qdrant_url = os.getenv("QDRANT_URL", "http://localhost:6333")
     print(f"\n[1/3] Connecting to Qdrant Docker server at {qdrant_url}...")
     client = QdrantClient(url=qdrant_url, timeout=60)
+    aclient = AsyncQdrantClient(url=qdrant_url, timeout=60)
     vector_store = QdrantVectorStore(
         client=client,
+        aclient=aclient,
         collection_name=COLLECTION_NAME
     )
     print("[2/3] Loading local embedding model (BAAI/bge-small-en-v1.5)...")
@@ -38,6 +41,34 @@ def session_query_engine(index, owner_id: str, owner_key: str = "session_id", st
         similarity_top_k=3,
         streaming=streaming,
         filters=MetadataFilters(filters=[MetadataFilter(key=owner_key, value=owner_id)]),
+    )
+
+# In-memory dictionary storing memory buffers per user_id
+chat_memories = {}
+
+def session_chat_engine(index, owner_id: str, owner_key: str, similarity_top_k: int = 3):
+    # 1. Enforce multi-tenant isolation
+    filters = MetadataFilters(
+        filters=[
+            MetadataFilter(
+                key=owner_key,
+                value=owner_id,
+                operator=FilterOperator.EQ # this is the default btw
+            )
+        ]
+    )
+
+    # 2. Get or create memory for this specific user session
+    if owner_id not in chat_memories:
+        chat_memories[owner_id] = ChatMemoryBuffer.from_defaults(token_limit=500)
+
+    # 3. Create isolated chat engine from index
+    return index.as_chat_engine(
+        chat_mode="condense_plus_context", # Best mode for multi-turn RAG
+        similarity_top_k=similarity_top_k,
+        filters=filters,
+        memory=chat_memories[owner_id],
+        system_prompt="You are DocuSense AI, an assistant that answers questions based on uploaded documents."
     )
 
 def ask_question(query_text: str):

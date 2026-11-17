@@ -1,9 +1,16 @@
 .workspace {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
   width: min(800px, 100%);
   box-sizing: border-box;
-  margin: 40px auto;
-  padding: 0 20px;
+  margin: 0px auto;
+  padding: 40px 20px;
   text-align: left;
+}
+
+.workspace-header {
+  flex-shrink: 0;
 }
 
 .workspace-header,
@@ -25,6 +32,12 @@
 
 .account-actions span {
   overflow-wrap: anywhere;
+}
+
+.qna-container {
+    flex-basis: 0;
+    flex-grow: 1;
+    overflow-y: auto;
 }
 
 .account-form,

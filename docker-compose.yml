@@ -55,7 +55,7 @@ services:
       watch:
         # Sync Python files instantly into the container
         - path: ./backend
-          action: sync
+          action: sync+restart
           target: /app/backend
           ignore:
             - data/

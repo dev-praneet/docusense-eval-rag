@@ -34,6 +34,8 @@ export function Main() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [question, setQuestion] = useState("");
+  const [questions, setQuestions] = useState<string[]>([]);
+  const [answers, setAnswers] = useState<string[]>([]);
   const [answer, setAnswer] = useState("");
   const [sources, setSources] = useState<Source[]>([]);
   const [scores, setScores] = useState<EvalScore | null>(null);
@@ -147,6 +149,8 @@ export function Main() {
 
   const handleQuery = async () => {
     if (!question.trim() || isStreaming) return;
+    setQuestions((prev) => [...prev, question]);
+
 
     // Reset state for new query
     setAnswer("");
@@ -209,8 +213,12 @@ export function Main() {
       }
 
       setIsStreaming(false);
+      setQuestion("");
+      setAnswers((prev) => [...prev, accumulatedAnswer]);
+      setAnswer("");
 
-      // 4. Asynchronous DeepEval Quality Score Check after stream completion
+      // 4. Asynchronous DeepEval Quality Score Check after stream completion (commented out for now)
+      /**
       if (accumulatedAnswer && retrievedContexts.length > 0) {
         setIsEvaluating(true);
         const evalRes = await fetch("http://localhost:8000/api/v1/eval", {
@@ -232,13 +240,20 @@ export function Main() {
           });
         }
         setIsEvaluating(false);
-      }
+    }
+    */
     } catch (error) {
       console.error("Streaming failed:", error);
       setIsStreaming(false);
       setIsEvaluating(false);
     }
   };
+
+  const  qna: string[] = [];
+  questions.forEach((q, idx) => {
+    qna.push(q);
+    answers[idx] && qna.push(answers[idx]);
+  });
 
   return (
     <div className="workspace">
@@ -281,9 +296,24 @@ export function Main() {
         </ul>
       </section>
       {message && <p role="alert" className="workspace-error">{message}</p>}
+      <div className="qna-container">
+          {qna.map((x, idx) => (
+            <div style={{ padding: "16px", border: "1px solid #e0e0e0", borderRadius: "6px", marginBottom: "20px" }}>
+              <h3 style={{ marginTop: 0 }}>{idx % 2 ? "Answer" : "Question"}:</h3>
+              <p style={{ whiteSpace: "pre-wrap", lineHeight: "1.6", margin: 0 }}>{x}</p>
+            </div>
+          ))}
+      </div>
+      {/* Answer Output Container */}
+      {answer && (
+        <div style={{ padding: "16px", border: "1px solid #e0e0e0", borderRadius: "6px", marginBottom: "20px" }}>
+          <h3 style={{ marginTop: 0 }}>Answer:</h3>
+          <p style={{ whiteSpace: "pre-wrap", lineHeight: "1.6", margin: 0 }}>{answer}</p>
+        </div>
+      )}
 
       {/* Query Input Section */}
-      <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+      <div style={{ display: "flex", gap: "10px", marginBlock: "20px" }}>
         <input
           type="text"
           value={question}
@@ -309,21 +339,13 @@ export function Main() {
         </button>
       </div>
 
-      {/* Answer Output Container */}
-      {answer && (
-        <div style={{ padding: "16px", border: "1px solid #e0e0e0", borderRadius: "6px", marginBottom: "20px" }}>
-          <h3 style={{ marginTop: 0 }}>Answer:</h3>
-          <p style={{ whiteSpace: "pre-wrap", lineHeight: "1.6", margin: 0 }}>{answer}</p>
-        </div>
-      )}
-
       {/* DeepEval Scorecard Dashboard */}
-      {isEvaluating && (
+      {/* {isEvaluating && (
         <div style={{ padding: "12px", backgroundColor: "#eef6ff", borderRadius: "4px", marginBottom: "20px" }}>
           ⏳ Computing DeepEval metrics (Faithfulness & Relevancy)...
         </div>
-      )}
-      {scores && (
+      )} */}
+      {/* {scores && (
         <div style={{ padding: "16px", backgroundColor: "#f9f9f9", border: "1px solid #ddd", borderRadius: "6px", marginBottom: "20px" }}>
           <h4 style={{ marginTop: 0, marginBottom: "12px" }}>Quality Control Scorecard</h4>
           <p style={{ margin: "4px 0" }}>
@@ -335,7 +357,7 @@ export function Main() {
             {scores.relevancy >= 0.7 ? "✅ Pass" : "❌ Flagged"}
           </p>
         </div>
-      )}
+      )} */}
 
       {/* Source Citations Accordions */}
       {sources.length > 0 && (
